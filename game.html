@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <title>Go Game Collection</title>
+  </head>
+  <body>
+    <h1>Go Game Gollection</h1>
+    {{range .Games}}
+    <p>{{.Name}}</p>
+    {{end}}
+    <br/><br/>
+    <h2>Add a new game</h2>
+    <form method="post" action="/game">
+      <p><label>Name</label>
+	<input name="name" type="text"/></p>
+
+      <p><label>System</label>
+	<select name="system">
+	  {{range .GameSystems}}
+	  <option value="{{ .ID }}">{{ .Name }}</option>
+	  {{end}}
+        </select></p>
+      <p><label>Played</label>
+	<input name="played" type="checkbox"/></p>
+
+      <input type="submit" value="Add"/>
+    </form>
+  </body>
+</html>
