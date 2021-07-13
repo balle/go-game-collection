@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -41,7 +40,7 @@ func gotError(w http.ResponseWriter, err error) bool {
 func listGames(w http.ResponseWriter, r *http.Request) {
 	var games []Game
 	var gameSystems []GameSystem
-	t, err := template.ParseFiles("game.html")
+	t, err := template.ParseFiles("templates/list_games.html")
 
 	if gotError(w, err) {
 		return
@@ -92,12 +91,31 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 		Played:      played,
 	})
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	//http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	listGames(w, r)
 }
 
 func showGame(w http.ResponseWriter, r *http.Request) {
-	game := mux.Vars(r)["game"]
-	fmt.Fprintf(w, "Showing game %s", game)
+	var game Game
+	gameId, err := strconv.Atoi(mux.Vars(r)["game"])
+
+	if gotError(w, err) {
+		return
+	}
+
+	db.First(&game, gameId)
+
+	t, err := template.ParseFiles("templates/show_game.html")
+
+	if gotError(w, err) {
+		return
+	}
+
+	err = t.Execute(w, struct{ Game Game }{game})
+
+	if gotError(w, err) {
+		return
+	}
 }
 
 func insertTestData() {

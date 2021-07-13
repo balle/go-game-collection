@@ -5,7 +5,7 @@
   <body>
     <h1>Go Game Gollection</h1>
     {{range .Games}}
-    <p>{{.Name}}</p>
+    <p><a href="/game/{{ .ID }}">{{.Name}}</a></p>
     {{end}}
     <br/><br/>
     <h2>Add a new game</h2>
