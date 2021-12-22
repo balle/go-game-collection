@@ -7,7 +7,7 @@
 
     <h2>My games</h2>
     {{range .Games}}
-    <p>{{.Name}}</p>
+    <p><a href="/game/{{ .ID }}">{{.Name}}</a></p>
     {{end}}
     <br/><br/>
 

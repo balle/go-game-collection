@@ -5,7 +5,6 @@ package main
  */
 
 import (
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -56,7 +55,7 @@ func gotError(w http.ResponseWriter, err error) bool {
 func listGames(w http.ResponseWriter, r *http.Request) {
 	var games []Game
 	var gameSystems []GameSystem
-	t, err := template.ParseFiles("game.html")
+	t, err := template.ParseFiles("templates/list_games.html")
 
 	if gotError(w, err) {
 		return
@@ -125,12 +124,36 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 		Played:      played,
 	})
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	listGames(w, r)
+}
+
+// Fetch a single game from the db and call the show game template
+func showGame(w http.ResponseWriter, r *http.Request) {
+	var game Game
+	gameId, err := strconv.Atoi(mux.Vars(r)["game"])
+
+	if gotError(w, err) {
+		return
+	}
+
+	db.First(&game, gameId)
+
+	t, err := template.ParseFiles("templates/show_game.html")
+
+	if gotError(w, err) {
+		return
+	}
+
+	err = t.Execute(w, struct{ Game Game }{game})
+
+	if gotError(w, err) {
+		return
+	}
 }
 
 // Add a new game system to the db
 func addGameSystem(w http.ResponseWriter, r *http.Request) {
-	// Parse form data
+	// Parse Form data
 	err := r.ParseForm()
 
 	if gotError(w, err) {
@@ -144,14 +167,7 @@ func addGameSystem(w http.ResponseWriter, r *http.Request) {
 		Name: params.Get("name"),
 	})
 
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-}
-
-// Fetch a single game and call the game show template
-// TODO: needs to be implemented
-func showGame(w http.ResponseWriter, r *http.Request) {
-	game := mux.Vars(r)["game"]
-	fmt.Fprintf(w, "Showing game %s", game)
+	listGames(w, r)
 }
 
 /*

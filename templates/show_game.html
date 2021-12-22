@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>Go Game Collection</title>
+  </head>
+  <body>
+    <h1>{{ .Game.Name }}</h1>
+
+    <p>Systems
+      <ul>
+      {{ range .Game.GameSystems }}
+      <li>{{ .Name }}</li>
+      {{ end }}
+    </ul></p>
+
+    <p>Status: {{ if .Game.Played }}Played{{ else }}Unplayed{{ end }}</p>
+  </body>
+</html>
