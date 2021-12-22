@@ -1,10 +1,15 @@
 package main
 
+/*
+ * IMPORTS
+ */
+
 import (
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -12,6 +17,9 @@ import (
 	"gorm.io/gorm"
 )
 
+/*
+ * TYPES AND VARIABLES
+ */
 type GameSystem struct {
 	gorm.Model
 	Name   string
@@ -22,12 +30,18 @@ type Game struct {
 	gorm.Model
 	Name         string
 	Played       bool
+	Finished     bool
 	GameSystemID int
 	GameSystems  []GameSystem
 }
 
 var db *gorm.DB
 
+/*
+ * FUNCTIONS
+ */
+
+// Got an error? Log it and return error code 500 to browser
 func gotError(w http.ResponseWriter, err error) bool {
 	if err != nil {
 		log.Println(err.Error())
@@ -38,6 +52,7 @@ func gotError(w http.ResponseWriter, err error) bool {
 	return false
 }
 
+// Receive all games from the db and call the game list template
 func listGames(w http.ResponseWriter, r *http.Request) {
 	var games []Game
 	var gameSystems []GameSystem
@@ -47,9 +62,20 @@ func listGames(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch all games and game systems from db
 	db.Find(&games)
 	db.Find(&gameSystems)
 
+	// Sort them by name
+	sort.Slice(games, func(i, j int) bool {
+		return sort.StringsAreSorted([]string{games[i].Name, games[j].Name})
+	})
+
+	sort.Slice(gameSystems, func(i, j int) bool {
+		return sort.StringsAreSorted([]string{gameSystems[i].Name, gameSystems[j].Name})
+	})
+
+	// Compile template with our data
 	data := struct {
 		Games       []Game
 		GameSystems []GameSystem
@@ -64,24 +90,31 @@ func listGames(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Add a new game to the db
 func addGame(w http.ResponseWriter, r *http.Request) {
+	var gameSystem GameSystem
+	played := false
+
+	// Parse Form data
 	err := r.ParseForm()
 
 	if gotError(w, err) {
 		return
 	}
 
-	var gameSystem GameSystem
-	played := false
 	params := r.Form
+
+	// Make sure gamesystem id is really a number
 	gameSystemId, err := strconv.Atoi(params.Get("system"))
 
 	if gotError(w, err) {
 		return
 	}
 
+	// Fetch gamesystem with given id
 	db.First(&gameSystem, gameSystemId)
 
+	// Create new game struct and save it in the database
 	if params.Get("played") == "on" {
 		played = true
 	}
@@ -95,27 +128,35 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
+// Add a new game system to the db
+func addGameSystem(w http.ResponseWriter, r *http.Request) {
+	// Parse form data
+	err := r.ParseForm()
+
+	if gotError(w, err) {
+		return
+	}
+
+	params := r.Form
+
+	// Create new game system struct and save it in the database
+	db.Create(&GameSystem{
+		Name: params.Get("name"),
+	})
+
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+}
+
+// Fetch a single game and call the game show template
+// TODO: needs to be implemented
 func showGame(w http.ResponseWriter, r *http.Request) {
 	game := mux.Vars(r)["game"]
 	fmt.Fprintf(w, "Showing game %s", game)
 }
 
-func insertTestData() {
-	nintendoSwitch := GameSystem{Name: "Nintendo Switch"}
-	db.Create(&nintendoSwitch)
-
-	playstation1 := GameSystem{Name: "Playstation 1"}
-	db.Create(&playstation1)
-
-	playstation3 := GameSystem{Name: "Playstation 3"}
-	db.Create(&playstation3)
-
-	gameboy := GameSystem{Name: "Gameboy"}
-	db.Create(&gameboy)
-
-	db.Create(&Game{Name: "Need for Speed", GameSystems: []GameSystem{playstation1, playstation3}})
-}
-
+/*
+ * MAIN FUNCTION
+ */
 func main() {
 	// Connect to the database
 	var err error
@@ -128,12 +169,12 @@ func main() {
 	// Migrate the schema
 	db.AutoMigrate(&GameSystem{}, &Game{})
 
-	insertTestData()
-
-	// Setup webserver
+	// Setup routes and run the webserver
 	r := mux.NewRouter()
 	r.HandleFunc("/", listGames)
 	r.HandleFunc("/game", addGame).Methods(http.MethodPost)
+	r.HandleFunc("/gamesystem", addGameSystem).Methods(http.MethodPost)
 	r.HandleFunc("/game/{game:[0-9]+}", showGame)
+
 	http.ListenAndServe(":8888", r)
 }
