@@ -7,7 +7,11 @@
 
     <h2>My games</h2>
     {{range .Games}}
-    <p><a href="/game/{{ .ID }}">{{.Name}}</a></p>
+    <p>
+      <a href="/game/edit/{{ .ID }}"><img src="images/Edit_icon.png"/></a>
+      <a href="/game/delete/{{ .ID }}"><img src="images/Trash_icon.png"/></a> 
+      <a href="/game/{{ .ID }}">{{.Name}}</a>
+    </p>
     {{end}}
     <br/><br/>
 

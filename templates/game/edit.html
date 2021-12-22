@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <title>Go Game Collection</title>
+  </head>
+  <body>
+    <h1>Go Game Gollection</h1><br/>
+
+    <h2>Edit game</h2>
+    {{ $game :=  .Game }}
+    <form method="post" action="/game">
+      <p>
+        <label>Name</label>
+      	<input name="name" type="text" value="{{ $game.Name }}"/>
+      </p>
+
+      <p>
+        <label>System</label>
+      	<select name="system" multiple>
+	      {{range $i, $gamesystem := .GameSystems}}
+	      <option value="{{ $gamesystem.ID }}" {{ if (onGameSystem $game.GameSystems $gamesystem.ID) }}selected{{ end }}>{{ $gamesystem.Name }}</option>
+	      {{end}}
+        </select>
+      </p>
+      
+      <p>
+        <label>Played</label>
+	      <input name="played" type="checkbox" {{ if $game.Played }}checked{{ end }}/>
+      </p>
+
+      <p>
+        <label>Finished</label>
+        <input name="finished" type="checkbox" {{ if $game.Finished }}checked{{ end }}/>
+      </p>
+  
+      <input type="submit" value="Update"/>
+    </form>
+</body>
+</html>
