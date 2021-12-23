@@ -131,10 +131,12 @@ func ShowEditGame(w http.ResponseWriter, r *http.Request) {
 	store.Db.Preload("GameSystems").First(&game, gameId)
 	store.Db.Find(&gameSystems)
 
+	// Sort by Name
 	sort.Slice(gameSystems, func(i, j int) bool {
 		return sort.StringsAreSorted([]string{gameSystems[i].Name, gameSystems[j].Name})
 	})
 
+	// Define template function onGameSystem to check if a GameSystemId is in the Systems of a Game
 	funcMap := template.FuncMap{
 		"onGameSystem": func(gameOnSystems []models.GameSystem, checkSystemId uint) bool {
 			result := false
