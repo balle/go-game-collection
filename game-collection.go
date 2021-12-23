@@ -11,28 +11,15 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/balle/go-game-collection/models"
 	"github.com/gorilla/mux"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 /*
- * TYPES AND VARIABLES
+ * VARIABLES
  */
-type GameSystem struct {
-	gorm.Model
-	Name   string
-	GameID uint
-}
-
-type Game struct {
-	gorm.Model
-	Name         string
-	Played       bool
-	Finished     bool
-	GameSystemID int
-	GameSystems  []GameSystem
-}
 
 var db *gorm.DB
 
@@ -53,8 +40,8 @@ func gotError(w http.ResponseWriter, err error) bool {
 
 // Receive all games from the db and call the game list template
 func listGames(w http.ResponseWriter, r *http.Request) {
-	var games []Game
-	var gameSystems []GameSystem
+	var games []models.Game
+	var gameSystems []models.GameSystem
 	t, err := template.ParseFiles("templates/game/list.html")
 
 	if gotError(w, err) {
@@ -76,8 +63,8 @@ func listGames(w http.ResponseWriter, r *http.Request) {
 
 	// Compile template with our data
 	data := struct {
-		Games       []Game
-		GameSystems []GameSystem
+		Games       []models.Game
+		GameSystems []models.GameSystem
 	}{
 		games,
 		gameSystems}
@@ -91,7 +78,7 @@ func listGames(w http.ResponseWriter, r *http.Request) {
 
 // Add a new game to the db
 func addGame(w http.ResponseWriter, r *http.Request) {
-	var gameSystem GameSystem
+	var gameSystem models.GameSystem
 	played := false
 	finished := false
 
@@ -123,9 +110,9 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 		finished = true
 	}
 
-	db.Create(&Game{
+	db.Create(&models.Game{
 		Name:        params.Get("name"),
-		GameSystems: []GameSystem{gameSystem},
+		GameSystems: []models.GameSystem{gameSystem},
 		Played:      played,
 		Finished:    finished,
 	})
@@ -135,7 +122,7 @@ func addGame(w http.ResponseWriter, r *http.Request) {
 
 // Fetch a single game from the db and call the show game template
 func showGame(w http.ResponseWriter, r *http.Request) {
-	var game Game
+	var game models.Game
 	gameId, err := strconv.Atoi(mux.Vars(r)["game"])
 
 	if gotError(w, err) {
@@ -150,7 +137,7 @@ func showGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = t.Execute(w, struct{ Game Game }{game})
+	err = t.Execute(w, struct{ Game models.Game }{game})
 
 	if gotError(w, err) {
 		return
@@ -159,8 +146,8 @@ func showGame(w http.ResponseWriter, r *http.Request) {
 
 // Fetch a single game from the db and call the edit game template
 func showEditGame(w http.ResponseWriter, r *http.Request) {
-	var game Game
-	var gameSystems []GameSystem
+	var game models.Game
+	var gameSystems []models.GameSystem
 	gameId, err := strconv.Atoi(mux.Vars(r)["game"])
 
 	if gotError(w, err) {
@@ -175,7 +162,7 @@ func showEditGame(w http.ResponseWriter, r *http.Request) {
 	})
 
 	funcMap := template.FuncMap{
-		"onGameSystem": func(gameOnSystems []GameSystem, checkSystemId uint) bool {
+		"onGameSystem": func(gameOnSystems []models.GameSystem, checkSystemId uint) bool {
 			result := false
 
 			for _, x := range gameOnSystems {
@@ -196,8 +183,8 @@ func showEditGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Game        Game
-		GameSystems []GameSystem
+		Game        models.Game
+		GameSystems []models.GameSystem
 	}{
 		game,
 		gameSystems}
@@ -212,7 +199,7 @@ func showEditGame(w http.ResponseWriter, r *http.Request) {
 // Update a single game in the db
 // TODO: Implement me
 func editGame(w http.ResponseWriter, r *http.Request) {
-	var game Game
+	var game models.Game
 	gameId, err := strconv.Atoi(mux.Vars(r)["game"])
 
 	if gotError(w, err) {
@@ -248,7 +235,7 @@ func editGame(w http.ResponseWriter, r *http.Request) {
 
 // Fetch a single game from the db and call the edit game template
 func deleteGame(w http.ResponseWriter, r *http.Request) {
-	var game Game
+	var game models.Game
 	gameId, err := strconv.Atoi(mux.Vars(r)["game"])
 
 	if gotError(w, err) {
@@ -273,7 +260,7 @@ func addGameSystem(w http.ResponseWriter, r *http.Request) {
 	params := r.Form
 
 	// Create new game system struct and save it in the database
-	db.Create(&GameSystem{
+	db.Create(&models.GameSystem{
 		Name: params.Get("name"),
 	})
 
@@ -293,7 +280,7 @@ func main() {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&GameSystem{}, &Game{})
+	db.AutoMigrate(&models.GameSystem{}, &models.Game{})
 
 	// Setup routes, register fileserver for images and run the webserver
 	r := mux.NewRouter()
