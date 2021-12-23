@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -11,4 +13,6 @@ type Game struct {
 	Finished     bool
 	GameSystemID int
 	GameSystems  []GameSystem
+	StartedAt    time.Time
+	FinishedAt   time.Time
 }
