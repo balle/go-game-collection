@@ -5,6 +5,8 @@
   <body>
     <h1>{{ .Game.Name }}</h1>
 
+    <p>Added at {{ .Game.CreatedAt }}</p>
+
     <p>Systems
       <ul>
       {{ range .Game.GameSystems }}
@@ -12,6 +14,14 @@
       {{ end }}
     </ul></p>
 
-    <p>Status: {{ if .Game.Played }}Played{{ else }}Unplayed{{ end }}</p>
+    <p>Status: {{ if .Game.Finished}}
+                Finished
+               {{ else }}
+                  {{ if .Game.Played }}
+                  Played
+                  {{ else }}
+                  Unplayed
+                  {{ end }}
+                {{ end }}</p>
   </body>
 </html>
