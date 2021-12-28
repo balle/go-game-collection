@@ -25,9 +25,7 @@ func get(url string) *httptest.ResponseRecorder {
 	return response
 }
 
-func TestListGames(t *testing.T) {
-	url := "/"
-	expected := "My games"
+func defaultTests(t *testing.T, url string, expected string) {
 	response := get(url)
 
 	if response.Code != 200 {
@@ -43,4 +41,8 @@ func TestListGames(t *testing.T) {
 	} else if !strings.Contains(string(body), expected) {
 		t.Errorf("Expected response %s \nGot %s", expected, body)
 	}
+}
+
+func TestListGames(t *testing.T) {
+	defaultTests(t, "/", "My games")
 }
